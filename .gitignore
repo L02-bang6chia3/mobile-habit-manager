@@ -1,3 +1,5 @@
+.vscode/*
+.vscode
 # FRONT-END IGNORE PART
 node_modules/
 
