@@ -1,3 +1,38 @@
+# FRONT-END IGNORE PART
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+app-example
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# generated native folders
+ios/
+android/
+
+# typescript
+*.tsbuildinfo
+# END OF FRONT-END IGNORE
+
 # Logs
 logs
 *.log
