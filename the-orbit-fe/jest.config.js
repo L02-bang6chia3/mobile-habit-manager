@@ -1,11 +1,18 @@
 module.exports = {
-  preset: "jest-expo",
-  transformIgnorePatterns: [
-    "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|expo-router|react-native-reanimated))"
-  ],
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  preset: 'jest-expo',
+  setupFilesAfterEnv: ['./jest.setup.js'],
   collectCoverage: true,
-  moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
-  },
+  collectCoverageFrom: [
+    'app/(tabs)/index.tsx', 
+    
+    // '!app/_layout.tsx',
+    // '!app/modal.tsx',
+    // '!app/(tabs)/_layout.tsx',
+    // '!app/(tabs)/explore.tsx',
+    // '!components/**', // Nếu bạn không test components thì loại bỏ cả folder này
+    '!**/node_modules/**',
+  ],
+  coverageReporters: ['lcov', 'text', 'html'],
+  coverageDirectory: 'coverage',
+  // ... các cấu hình khác
 };

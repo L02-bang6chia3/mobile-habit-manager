@@ -1,0 +1,52 @@
+name: Orbit Fullstack CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job dành cho Frontend
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - [cite_start]uses: actions/checkout@v4 [cite: 259]
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          [cite_start]node-version: 22 [cite: 262]
+          [cite_start]cache: 'npm' [cite: 263]
+          
+      - name: Install FE Dependencies
+        # Di chuyển vào folder fe để cài đặt [cite: 265]
+        run: cd the-orbit-fe && npm install --legacy-peer-deps 
+        
+      - name: Run FE Tests
+        # Chạy test và sinh báo cáo coverage [cite: 267, 268]
+        run: cd the-orbit-fe && npm run test:coverage
+        
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report # Phải đúng tên này
+          path: the-orbit-fe/coverage/lcov-report/
+
+  # Job dành cho SonarCloud Scan
+  sonarcloud-analysis:
+    [cite_start]needs: [test-frontend] # Chỉ chạy khi test xong [cite: 239]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download FE Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: fe-coverage
+          path: the-orbit-fe/coverage/
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          [cite_start]GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} [cite: 281]
+          [cite_start]SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} [cite: 280]
