@@ -2,6 +2,7 @@
 .vscode
 # FRONT-END IGNORE PART
 node_modules/
+coverage/
 
 # Expo
 .expo/
