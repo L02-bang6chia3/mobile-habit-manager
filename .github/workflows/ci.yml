@@ -1,52 +1,51 @@
-name: Orbit Fullstack CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [ main ]
+    types: [opened, synchronize, reopened]
 
 jobs:
-  # Job dành cho Frontend
-  test-frontend:
+  build-and-test:
+    name: Build, Test and Analyze
     runs-on: ubuntu-latest
+
     steps:
-      - [cite_start]uses: actions/checkout@v4 [cite: 259]
-      
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarCloud cần fetch-depth: 0 để phân tích tốt hơn
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          [cite_start]node-version: 22 [cite: 262]
-          [cite_start]cache: 'npm' [cite: 263]
-          
-      - name: Install FE Dependencies
-        # Di chuyển vào folder fe để cài đặt [cite: 265]
-        run: cd the-orbit-fe && npm install --legacy-peer-deps 
-        
-      - name: Run FE Tests
-        # Chạy test và sinh báo cáo coverage [cite: 267, 268]
-        run: cd the-orbit-fe && npm run test:coverage
-        
-      - name: Upload Test Report
+          node-version: 18
+
+      - name: Install Dependencies
+        run: |
+          cd the-orbit-fe
+          npm install --legacy-peer-deps
+
+      - name: Run Tests with Coverage
+        run: |
+          cd the-orbit-fe
+          npm run test:coverage
+
+      # Bước nộp bài quan trọng nhất: Upload file báo cáo HTML làm Artifact
+      - name: Upload Test Report Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: test-report # Phải đúng tên này
-          path: the-orbit-fe/coverage/lcov-report/
+          name: test-report # Tên artifact giảng viên yêu cầu
+          path: the-orbit-fe/coverage/lcov-report/ # Gom toàn bộ folder báo cáo HTML
 
-  # Job dành cho SonarCloud Scan
-  sonarcloud-analysis:
-    [cite_start]needs: [test-frontend] # Chỉ chạy khi test xong [cite: 239]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download FE Coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: fe-coverage
-          path: the-orbit-fe/coverage/
-
+      # Bước đẩy dữ liệu lên SonarCloud để lấy chỉ số A và Coverage >= 70%
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          [cite_start]GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} [cite: 281]
-          [cite_start]SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} [cite: 280]
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: the-orbit-fe
