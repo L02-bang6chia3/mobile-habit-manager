@@ -1,6 +1,24 @@
 # The Orbit FE
 
-README nhanh để chạy project local.
+## Hướng dẫn Testing & Quality Control
+### 1. Chạy Test tại máy cá nhân (Local)
+Để kiểm tra chất lượng mã nguồn trước khi push lên GitHub, thực hiện các bước sau:
+
+```bash
+cd the-orbit-fe
+
+npm install --legacy-peer-deps
+
+npm audit fix
+
+npm run test:coverage
+```
+
+### 2. Xem báo cáo chi tiết (HTML Report)
+Sau khi chạy lệnh trên, hệ thống sẽ tự động sinh ra báo cáo định dạng HTML. Bạn có thể mở để kiểm tra từng dòng code:
+* **Đường dẫn:** `the-orbit-fe/coverage/lcov-report/index.html`
+* **Cách xem:** Chuột phải vào file `index.html` -> **Open with Browser** (Chrome/Edge).
+nhé!
 
 ## Yêu cầu
 
