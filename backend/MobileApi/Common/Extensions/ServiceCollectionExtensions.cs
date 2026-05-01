@@ -1,5 +1,6 @@
 using MobileApi.Common.Abstractions;
 using MobileApi.Common.Security;
+using MobileApi.Services;
 
 namespace MobileApi.Common.Extensions;
 
@@ -11,7 +12,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtProvider, JwtProvider>();
 
         // (Sau này đăng ký các Service khác tại đây)
-        // Ví dụ: services.AddScoped<IHabitService, HabitService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }
