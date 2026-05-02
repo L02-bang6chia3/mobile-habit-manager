@@ -60,4 +60,6 @@ public class HabitTemplate
     public int LongestStreak { get; set; } = 0;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Tương đương Date.now()
+
+    public bool IsDeleted { get; set; } = false;
 }

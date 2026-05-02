@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using MobileApi.Enums;
 
 namespace MobileApi.Models;
@@ -26,4 +26,6 @@ public class OrbitInstance
     public TimeSpan Duration { get; set; }
 
     public OrbitState State { get; set; } = OrbitState.Pending;
+
+    public bool IsDeleted { get; set; } = false;
 }
