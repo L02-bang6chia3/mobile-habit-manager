@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
 
         // (Sau này đăng ký các Service khác tại đây)
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IHabitService, HabitService>();
 
         return services;
     }
