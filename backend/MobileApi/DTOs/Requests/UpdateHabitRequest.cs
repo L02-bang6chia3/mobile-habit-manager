@@ -4,9 +4,12 @@ namespace MobileApi.DTOs.Requests;
 
 public class UpdateHabitRequest
 {
-    public string? Title { get; set; } = string.Empty;
-    public string? Description { get; set; } = string.Empty;
-    public string? Category { get; set; } = string.Empty;
-    public HabitType Type { get; set; }
-    public List<CreateMissionTaskRequest>? Tasks { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public string? Category { get; set; }
+    public HabitType? Type { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string? RecurrenceRule { get; set; }
+    public List<UpdateMissionTaskRequest>? MissionTasks { get; set; }
 }

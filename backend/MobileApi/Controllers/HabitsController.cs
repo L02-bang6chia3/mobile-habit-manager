@@ -58,7 +58,7 @@ public class HabitsController(IHabitService habitService) : ControllerBase
         return Ok(new { data = habit });
     }
 
-    [HttpPut("{id}")]
+    [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateHabit(Guid id, [FromBody] UpdateHabitRequest request)
     {
         var userId = GetUserId();

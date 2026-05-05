@@ -1,6 +1,73 @@
-@MobileApi_HostAddress = http://localhost:5144
+@HostAddress = http://localhost:5144
+@Token = TOKEN_TỪ_LOGIN
 
-GET {{MobileApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### 0. Đăng ký
+POST {{HostAddress}}/api/auth/register
+Content-Type: application/json
 
-###
+{
+    "email": "[EMAIL_ADDRESS]",
+    "password": "[PASSWORD]",
+    "username": "[USERNAME]"
+}
+
+### 1. Đăng nhập (Lấy Token)
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer1@gmail.com",
+  "password": "12345678"
+}
+
+### 2. Xem danh sách Habit
+GET {{HostAddress}}/api/habits
+Authorization: Bearer {{Token}}
+
+### 3. Tạo một Habit mới (Loại Mission)
+# @name createHabit
+POST {{HostAddress}}/api/habits
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Lộ trình luyện giao tiếp 21 ngày",
+  "description": "Tập trung vào phản xạ nói",
+  "category": "Education",
+  "type": 1,
+  "startDate": "2026-07-01T00:00:00Z",
+  "endDate": "2026-07-21T23:59:59Z",
+  "missionTasks": [
+    {
+      "title": "Chặng 1: Ôn ngữ pháp cơ bản",
+      "description": "Thì hiện tại, quá khứ",
+      "sequenceOrder": 1,
+      "estimatedDuration": "02:00:00"
+    },
+    {
+      "title": "Chặng 2: Viết câu đơn",
+      "sequenceOrder": 2,
+      "estimatedDuration": "02:30:00"
+    }
+  ]
+}
+
+### 4. Sửa Habit (PATCH)
+# Copy ID của Habit vừa tạo ở trên thay vào chỗ <HABIT_ID>
+PATCH {{HostAddress}}/api/habits/<HABIT_ID>
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "missionTasks": [
+    {
+      "id": "<ID_TASK_CŨ_THAY_VÀO_ĐÂY>",
+      "title": "Chặng 1: Đã đổi tên bằng HTTP File"
+    },
+    {
+      "title": "Chặng 3: Task mới hoàn toàn vừa thêm",
+      "sequenceOrder": 3,
+      "estimatedDuration": "01:00:00"
+    }
+  ]
+}

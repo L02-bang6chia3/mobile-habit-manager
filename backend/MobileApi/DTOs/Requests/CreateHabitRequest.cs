@@ -12,6 +12,8 @@ public class CreateHabitRequest
     public string Category { get; set; } = string.Empty;
     [Required]
     public HabitType Type { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
     public List<CreateMissionTaskRequest>? MissionTasks { get; set; }
     public string? RecurrenceRule { get; set; }
 }
