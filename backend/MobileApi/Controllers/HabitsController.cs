@@ -1,42 +1,90 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MobileApi.DTOs.Requests;
 using MobileApi.Services;
 
 namespace MobileApi.Controllers;
 
-/*
- * ĐÂY LÀ PHẦN TƯƠNG ĐƯƠNG VỚI routes/ VÀ controllers/ TRONG EXPRESS.JS
- * 
- * Thay vì: 
- *   const router = express.Router();
- *   router.post('/habits', habitController.createHabit);
- *   module.exports = router;
- * 
- * Chúng ta định nghĩa Base Route ở [Route("api/[controller]")]
- * Chữ [controller] sẽ tự động lấy tên class "Habits" (bỏ chữ Controller đi).
- * Vậy URL sẽ là: /api/habits
- */
-
+[Authorize]
 [ApiController]
-[Route("api/[controller]")] // Tương đương router.use('/api/habits')
-public class HabitsController : ControllerBase
+[Route("api/[controller]")]
+public class HabitsController(IHabitService habitService) : ControllerBase
 {
-    private readonly IHabitService _habitService;
+    private readonly IHabitService _habitService = habitService;
 
-    // Kéo Service vào (Dependency Injection)
-    public HabitsController(IHabitService habitService)
+    private Guid GetUserId()
     {
-        _habitService = habitService;
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
     }
 
-    // Tương đương: router.post('/', (req, res) => { ... })
     [HttpPost]
     public async Task<IActionResult> CreateHabit([FromBody] CreateHabitRequest reqBody)
     {
-        // Gọi logic xử lý từ Service
-        var habitId = await _habitService.CreateHabitAsync(reqBody);
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
 
-        // Trả về response (Giống res.status(200).json({...}))
-        return Ok(new { message = "Tạo thói quen thành công!", data = habitId });
+        var habitId = await _habitService.CreateHabitAsync(userId, reqBody);
+        return CreatedAtAction(
+            nameof(GetHabitById),
+            new { id = habitId },
+            new { data = habitId }
+        );
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllHabit()
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
+
+        var habits = await _habitService.GetAllHabitsAsync(userId);
+        return Ok(new { data = habits });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetHabitById(Guid id)
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
+
+        var habit = await _habitService.GetHabitByIdAsync(userId, id);
+        if (habit == null)
+        {
+            return NotFound(new { error = "Habit not found!" });
+        }
+
+        return Ok(new { data = habit });
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateHabit(Guid id, [FromBody] UpdateHabitRequest request)
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
+
+        var habit = await _habitService.UpdateHabitAsync(userId, id, request);
+        if (!habit)
+        {
+            return NotFound(new { error = "Habit not found!" });
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteHabit(Guid id)
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
+
+        var habit = await _habitService.DeleteHabitAsync(userId, id);
+        if (!habit)
+        {
+            return NotFound(new { error = "Habit not found!" });
+        }
+
+        return NoContent();
     }
 }
