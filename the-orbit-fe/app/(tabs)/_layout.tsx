@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { colors } from '../../constants/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -16,6 +17,30 @@ function TabIcon({
   activeIcon: IconName;
   color: string;
 }) {
+  if (focused) {
+    return (
+      <LinearGradient
+        colors={['#60a5fa', '#a855f7', '#ec4899']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 21,
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#A855F7',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.35,
+          shadowRadius: 10,
+          elevation: 6,
+        }}
+      >
+        <Ionicons name={activeIcon} size={21} color={color} />
+      </LinearGradient>
+    );
+  }
+
   return (
     <View
       style={{
@@ -24,10 +49,10 @@ function TabIcon({
         borderRadius: 21,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: focused ? colors.purple : 'transparent',
+        backgroundColor: 'transparent',
       }}
     >
-      <Ionicons name={focused ? activeIcon : icon} size={21} color={color} />
+      <Ionicons name={icon} size={21} color={color} />
     </View>
   );
 }
@@ -44,19 +69,19 @@ export default function TabsLayout() {
           left: 0,
           right: 0,
           bottom: 0,
-          height: 84,
-          borderTopLeftRadius: 36,
-          borderTopRightRadius: 36,
-          backgroundColor: colors.black,
+          height: 92,
+          borderTopLeftRadius: 40,
+          borderTopRightRadius: 40,
+          backgroundColor: '#1A1A1A',
           borderTopWidth: 0,
-          paddingTop: 8,
-          paddingBottom: 12,
+          paddingTop: 10,
+          paddingBottom: 14,
         },
         tabBarLabelStyle: {
-          fontSize: 9,
-          letterSpacing: 1,
+          fontSize: 10,
+          letterSpacing: 1.5,
           fontWeight: '700',
-          marginTop: 2,
+          marginTop: 4,
         },
       }}
     >
@@ -64,6 +89,12 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'HOME',
+          tabBarLabel: ({ focused, color }) =>
+            focused ? null : (
+              <Text style={{ color, fontSize: 10, letterSpacing: 1.5, fontWeight: '700', marginTop: 4 }}>
+                HOME
+              </Text>
+            ),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon focused={focused} color={color} icon="home-outline" activeIcon="home" />
           ),
@@ -74,6 +105,12 @@ export default function TabsLayout() {
         name="library"
         options={{
           title: 'LIBRARY',
+          tabBarLabel: ({ focused, color }) =>
+            focused ? null : (
+              <Text style={{ color, fontSize: 10, letterSpacing: 1.5, fontWeight: '700', marginTop: 4 }}>
+                LIBRARY
+              </Text>
+            ),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon focused={focused} color={color} icon="book-outline" activeIcon="book" />
           ),
@@ -84,6 +121,12 @@ export default function TabsLayout() {
         name="habits"
         options={{
           title: 'HABITS',
+          tabBarLabel: ({ focused, color }) =>
+            focused ? null : (
+              <Text style={{ color, fontSize: 10, letterSpacing: 1.5, fontWeight: '700', marginTop: 4 }}>
+                HABITS
+              </Text>
+            ),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
               focused={focused}
@@ -99,6 +142,12 @@ export default function TabsLayout() {
         name="signal"
         options={{
           title: 'SIGNAL',
+          tabBarLabel: ({ focused, color }) =>
+            focused ? null : (
+              <Text style={{ color, fontSize: 10, letterSpacing: 1.5, fontWeight: '700', marginTop: 4 }}>
+                SIGNAL
+              </Text>
+            ),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
               focused={focused}
@@ -114,6 +163,12 @@ export default function TabsLayout() {
         name="settings"
         options={{
           title: 'SETTINGS',
+          tabBarLabel: ({ focused, color }) =>
+            focused ? null : (
+              <Text style={{ color, fontSize: 10, letterSpacing: 1.5, fontWeight: '700', marginTop: 4 }}>
+                SETTINGS
+              </Text>
+            ),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
               focused={focused}

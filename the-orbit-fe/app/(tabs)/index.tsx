@@ -5,15 +5,16 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HabitCard } from '@/components/home/HabitCard';
 import { colors } from '@/constants/theme';
+// import GradientText from "@/components/GradientText";
 
 export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <LinearGradient colors={['#050711', '#07111A', '#050711']} style={styles.container}>
         <Image
-          source={require('../../assets/images/planet-bg.png')}
+          source={require('../../assets/images/orbit-planet.png')}
           style={styles.bgImage}
-          resizeMode="cover"
+          resizeMode="contain"
         />
 
         <LinearGradient
@@ -65,13 +66,14 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    position: 'relative',
-    overflow: 'hidden',
+    backgroundColor: '#131318',
+    justifyContent: 'flex-end',
   },
   bgImage: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    bottom: 0,
     width: '100%',
-    height: '100%',
+    height: '60%',
     opacity: 0.88,
   },
 
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    color: colors.primary,
+    // color: colors.primary,
     fontSize: 38,
     fontWeight: '800',
     marginTop: 6,
