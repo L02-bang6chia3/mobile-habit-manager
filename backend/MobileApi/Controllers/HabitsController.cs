@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MobileApi.DTOs.Requests;
@@ -9,15 +8,9 @@ namespace MobileApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class HabitsController(IHabitService habitService) : ControllerBase
+public class HabitsController(IHabitService habitService) : BaseController
 {
     private readonly IHabitService _habitService = habitService;
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
-    }
 
     [HttpPost]
     public async Task<IActionResult> CreateHabit([FromBody] CreateHabitRequest reqBody)
@@ -34,13 +27,13 @@ public class HabitsController(IHabitService habitService) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllHabit()
+    public async Task<IActionResult> GetAllHabits([FromQuery] PaginationRequest pagination)
     {
         var userId = GetUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var habits = await _habitService.GetAllHabitsAsync(userId);
-        return Ok(new { data = habits });
+        var result = await _habitService.GetAllHabitsAsync(userId, pagination);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

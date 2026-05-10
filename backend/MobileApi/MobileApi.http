@@ -1,17 +1,20 @@
 @HostAddress = http://localhost:5144
-@Token = TOKEN_TỪ_LOGIN
+@Token = {{login.response.body.data}}
+
+### ==================== AUTH ====================
 
 ### 0. Đăng ký
 POST {{HostAddress}}/api/auth/register
 Content-Type: application/json
 
 {
-    "email": "[EMAIL_ADDRESS]",
-    "password": "[PASSWORD]",
-    "username": "[USERNAME]"
+    "email": "customer1@gmail.com",
+    "password": "12345678",
+    "username": "customer1"
 }
 
 ### 1. Đăng nhập (Lấy Token)
+# @name login
 POST {{HostAddress}}/api/auth/login
 Content-Type: application/json
 
@@ -20,12 +23,59 @@ Content-Type: application/json
   "password": "12345678"
 }
 
-### 2. Xem danh sách Habit
+### 1b. Đăng nhập sai mật khẩu (expect 401)
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer1@gmail.com",
+  "password": "wrongpassword"
+}
+
+### 1c. Đăng nhập email không tồn tại (expect 401)
+POST {{HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "notexist@gmail.com",
+  "password": "12345678"
+}
+
+### 1d. Đăng ký email trùng (expect 400)
+POST {{HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "customer1@gmail.com",
+    "password": "12345678",
+    "username": "customer1"
+}
+
+### 1e. Đăng ký thiếu field (expect 400)
+POST {{HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "invalid-email",
+    "password": "123"
+}
+
+
+### ==================== HABITS ====================
+
+### 2. Xem danh sách Habit (mặc định page 1, size 10)
 GET {{HostAddress}}/api/habits
 Authorization: Bearer {{Token}}
 
-### 3. Tạo một Habit mới (Loại Mission)
-# @name createHabit
+### 2b. Xem danh sách Habit với pagination
+GET {{HostAddress}}/api/habits?page=1&pageSize=2
+Authorization: Bearer {{Token}}
+
+### 2c. Xem danh sách Habit không có token (expect 401)
+GET {{HostAddress}}/api/habits
+
+### 3. Tạo Habit loại Mission
+# @name createMission
 POST {{HostAddress}}/api/habits
 Authorization: Bearer {{Token}}
 Content-Type: application/json
@@ -52,22 +102,216 @@ Content-Type: application/json
   ]
 }
 
-### 4. Sửa Habit (PATCH)
-# Copy ID của Habit vừa tạo ở trên thay vào chỗ <HABIT_ID>
+### 3b. Tạo Habit loại Routine
+# @name createRoutine
+POST {{HostAddress}}/api/habits
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Uống 2 lít nước mỗi ngày",
+  "description": "Uống nước đều đặn",
+  "category": "Health",
+  "type": 0,
+  "recurrenceRule": "{\"frequency\": \"daily\", \"times\": 8}"
+}
+
+### 3c. Tạo Habit thiếu title (expect 400)
+POST {{HostAddress}}/api/habits
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "type": 1
+}
+
+### 3d. Tạo Habit endDate trước startDate (expect 400)
+POST {{HostAddress}}/api/habits
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Test invalid date",
+  "type": 1,
+  "startDate": "2026-07-21T00:00:00Z",
+  "endDate": "2026-07-01T00:00:00Z"
+}
+
+### 4. Xem chi tiết Habit (thay <HABIT_ID>)
+GET {{HostAddress}}/api/habits/<HABIT_ID>
+Authorization: Bearer {{Token}}
+
+### 4b. Xem habit không tồn tại (expect 404)
+GET {{HostAddress}}/api/habits/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{Token}}
+
+### 5. Sửa Habit — chỉ scalar fields
 PATCH {{HostAddress}}/api/habits/<HABIT_ID>
 Authorization: Bearer {{Token}}
 Content-Type: application/json
 
 {
-  "missionTasks": [
-    {
-      "id": "<ID_TASK_CŨ_THAY_VÀO_ĐÂY>",
-      "title": "Chặng 1: Đã đổi tên bằng HTTP File"
-    },
-    {
-      "title": "Chặng 3: Task mới hoàn toàn vừa thêm",
-      "sequenceOrder": 3,
-      "estimatedDuration": "01:00:00"
-    }
-  ]
+  "title": "Lộ trình đã đổi tên",
+  "category": "Language"
 }
+
+### 5b. Sửa Habit — đổi type (expect 400)
+PATCH {{HostAddress}}/api/habits/<HABIT_ID>
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "type": 0
+}
+
+### 5c. Sửa Habit không tồn tại (expect 404)
+PATCH {{HostAddress}}/api/habits/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Ghost habit"
+}
+
+### 6. Xoá Habit (thay <HABIT_ID>)
+DELETE {{HostAddress}}/api/habits/<HABIT_ID>
+Authorization: Bearer {{Token}}
+
+### 6b. Xoá Habit không tồn tại (expect 404)
+DELETE {{HostAddress}}/api/habits/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{Token}}
+
+
+### ==================== MISSION TASKS ====================
+
+### 7. Xem tất cả task của Habit (thay <HABIT_ID>)
+GET {{HostAddress}}/api/habits/<HABIT_ID>/tasks
+Authorization: Bearer {{Token}}
+
+### 7b. Xem task của habit không tồn tại (expect empty array)
+GET {{HostAddress}}/api/habits/00000000-0000-0000-0000-000000000000/tasks
+Authorization: Bearer {{Token}}
+
+### 8. Thêm task mới vào Mission
+POST {{HostAddress}}/api/habits/<HABIT_ID>/tasks
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Chặng 3: Luyện nói theo video",
+  "description": "Shadowing technique",
+  "sequenceOrder": 3,
+  "estimatedDuration": "01:30:00"
+}
+
+### 8b. Thêm task vào Routine habit (expect 400)
+POST {{HostAddress}}/api/habits/<ROUTINE_HABIT_ID>/tasks
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Task không hợp lệ",
+  "sequenceOrder": 1,
+  "estimatedDuration": "00:30:00"
+}
+
+### 8c. Thêm task thiếu title (expect 400)
+POST {{HostAddress}}/api/habits/<HABIT_ID>/tasks
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "sequenceOrder": 4,
+  "estimatedDuration": "01:00:00"
+}
+
+### 9. Sửa task (thay <HABIT_ID> và <TASK_ID>)
+PATCH {{HostAddress}}/api/habits/<HABIT_ID>/tasks/<TASK_ID>
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Chặng 1 đã được cập nhật",
+  "estimatedDuration": "03:00:00"
+}
+
+### 9b. Sửa task không tồn tại (expect 404)
+PATCH {{HostAddress}}/api/habits/<HABIT_ID>/tasks/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "title": "Ghost task"
+}
+
+### 10. Reorder tasks — gửi danh sách ID theo thứ tự mới
+PUT {{HostAddress}}/api/habits/<HABIT_ID>/tasks/reorder
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+[
+  "<TASK_ID_2>",
+  "<TASK_ID_3>",
+  "<TASK_ID_1>"
+]
+
+### 11. Xoá task (thay <HABIT_ID> và <TASK_ID>)
+DELETE {{HostAddress}}/api/habits/<HABIT_ID>/tasks/<TASK_ID>
+Authorization: Bearer {{Token}}
+
+### 11b. Xoá task không tồn tại (expect 404)
+DELETE {{HostAddress}}/api/habits/<HABIT_ID>/tasks/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{Token}}
+
+
+### ==================== USERS ====================
+
+### 12. Xem profile của chính mình
+GET {{HostAddress}}/api/users/me
+Authorization: Bearer {{Token}}
+
+### 12b. Xem profile không có token (expect 401)
+GET {{HostAddress}}/api/users/me
+
+### 13. Cập nhật profile
+PATCH {{HostAddress}}/api/users/me
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "username": "new_username",
+  "avatar": "https://example.com/avatar.png",
+  "birthday": "2000-01-15T00:00:00Z"
+}
+
+### 13b. Cập nhật chỉ một field
+PATCH {{HostAddress}}/api/users/me
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "username": "only_username_changed"
+}
+
+### ==================== ADMIN ONLY ====================
+### (Các request dưới cần token của tài khoản có role = "admin")
+
+### 14. Lấy danh sách tất cả users (expect 403 nếu không phải admin)
+GET {{HostAddress}}/api/users
+Authorization: Bearer {{Token}}
+
+### 14b. Pagination
+GET {{HostAddress}}/api/users?page=1&pageSize=5
+Authorization: Bearer {{Token}}
+
+### 15. Xem user theo ID
+GET {{HostAddress}}/api/users/<USER_ID>
+Authorization: Bearer {{Token}}
+
+### 15b. Xem user không tồn tại (expect 404)
+GET {{HostAddress}}/api/users/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{Token}}
+
+### 16. Xoá user (hard delete, expect 404 nếu không tồn tại)
+DELETE {{HostAddress}}/api/users/<USER_ID>
+Authorization: Bearer {{Token}}

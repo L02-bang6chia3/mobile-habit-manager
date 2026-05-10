@@ -3,7 +3,7 @@ using MobileApi.Enums;
 
 namespace MobileApi.DTOs.Requests;
 
-public class CreateHabitRequest
+public class CreateHabitRequest : IValidatableObject
 {
     [Required(ErrorMessage = "Title is required")]
     [MaxLength(200, ErrorMessage = "Title cannot exceed 200 characters")]
@@ -16,4 +16,10 @@ public class CreateHabitRequest
     public DateTime? EndDate { get; set; }
     public List<CreateMissionTaskRequest>? MissionTasks { get; set; }
     public string? RecurrenceRule { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext context)
+    {
+        if (StartDate.HasValue && EndDate.HasValue && EndDate <= StartDate)
+            yield return new ValidationResult("EndDate must be after StartDate", [nameof(EndDate)]);
+    }
 }

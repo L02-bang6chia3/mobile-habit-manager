@@ -54,6 +54,6 @@ public class AuthService(ApplicationDbContext dbContext, IJwtProvider jwtProvide
             throw new UnauthorizedException("Invalid email or password.");
         }
 
-        return _jwtProvider.GenerateToken(user.Email, user.Id.ToString());
+        return _jwtProvider.GenerateToken(user.Email, user.Id.ToString(), user.Role);
     }
 }

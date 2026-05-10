@@ -1,6 +1,5 @@
 using MobileApi.Data;
 using MobileApi.Common.Extensions;
-using MobileApi.Common.Abstractions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,6 +7,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using Microsoft.AspNetCore.Diagnostics;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 // Load environment variables from .env file
 Env.Load();
@@ -39,9 +40,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSecret!))
+                Encoding.UTF8.GetBytes(jwtSecret!)),
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = JwtRegisteredClaimNames.Sub
         };
     });
+
+// Add Authorization policies
+builder.Services.AddAuthorizationBuilder().AddPolicy("AdminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "admin"));
 
 // Add FluentValidation
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
