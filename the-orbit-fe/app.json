@@ -1,11 +1,9 @@
 {
   "expo": {
-    "name": "the-orbit",
+    "name": "the orbit",
     "slug": "the-orbit",
     "orientation": "portrait",
     "scheme": "theorbit",
-    "plugins": [
-      "expo-web-browser"
-    ]
+    "plugins": ["expo-web-browser"]
   }
 }

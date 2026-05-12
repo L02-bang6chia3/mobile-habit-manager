@@ -1,7 +1,6 @@
 // components/home/PlanetHero.tsx
 
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { colors } from '../../constants/theme';
 
 export function PlanetHero() {
   const { width } = useWindowDimensions();

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import HomeScreen from '../app/(tabs)/index';
