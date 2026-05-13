@@ -19,15 +19,51 @@ public class ApplicationDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<UserIntegration> UserIntegrations { get; set; }
+    public DbSet<UserPreference> UserPreferences { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Thiết lập tính duy nhất (Unique) cho Email của User
-        modelBuilder.Entity<User>(entity =>
+        modelBuilder.Entity<User>(e =>
         {
-            entity.HasIndex(e => e.Email).IsUnique();
+            e.HasIndex(u => u.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<UserPreference>(e =>
+        {
+            e.HasIndex(p => p.UserId).IsUnique();
+            e.HasOne<User>().WithOne().HasForeignKey<UserPreference>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<HabitTemplate>(e =>
+        {
+            e.HasOne<User>().WithMany().HasForeignKey(h => h.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MissionTask>(e =>
+        {
+            e.HasOne<HabitTemplate>().WithMany().HasForeignKey(t => t.HabitTemplateId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrbitInstance>(e =>
+        {
+            e.HasOne<User>().WithMany().HasForeignKey(o => o.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<HabitTemplate>().WithMany().HasForeignKey(o => o.HabitId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<MissionTask>().WithMany().HasForeignKey(o => o.MissionTaskId).OnDelete(DeleteBehavior.SetNull).IsRequired(false);
+            // Scheduler queries windows by user + time range
+            e.HasIndex(o => new { o.UserId, o.TimeStart, o.TimeEnd });
+        });
+
+        modelBuilder.Entity<BusyTime>(e =>
+        {
+            e.HasOne<User>().WithMany().HasForeignKey(b => b.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(b => new { b.UserId, b.StartTime, b.EndTime });
+        });
+
+        modelBuilder.Entity<UserIntegration>(e =>
+        {
+            e.HasOne<User>().WithMany().HasForeignKey(ui => ui.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
