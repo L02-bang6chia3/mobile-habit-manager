@@ -1,3 +1,7 @@
+using System.Security.Claims;
+using System.Text;
+using System.Threading.RateLimiting;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -5,9 +9,8 @@ using Microsoft.OpenApi.Models;
 using MobileApi.Common.Abstractions;
 using MobileApi.Common.Security;
 using MobileApi.Data;
+using MobileApi.Infrastructure.LLM;
 using MobileApi.Services;
-using FluentValidation;
-using System.Text;
 
 namespace MobileApi.Common.Extensions;
 
@@ -111,6 +114,38 @@ public static class DependencyInjection
                     new[] { "openid", "email", "profile", "https://www.googleapis.com/auth/calendar" }
                 }
             });
+        });
+
+        // --- Groq LLM ---
+        var groqSection = configuration.GetSection("AI:Groq");
+        services.Configure<GroqOptions>(groqSection);
+        services.AddHttpClient("Groq", (sp, client) =>
+        {
+            client.BaseAddress = new Uri(groqSection["BaseUrl"] ?? "https://api.groq.com/openai/v1/");
+        });
+
+        // --- Rate limiter: 20 AI chat messages per user per hour ---
+        services.AddRateLimiter(options =>
+        {
+            options.AddPolicy("AiChat", context =>
+            {
+                var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anon";
+                return RateLimitPartition.GetSlidingWindowLimiter(userId, _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit          = 20,
+                    Window               = TimeSpan.FromHours(1),
+                    SegmentsPerWindow    = 6,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit           = 0
+                });
+            });
+
+            options.OnRejected = async (ctx, ct) =>
+            {
+                ctx.HttpContext.Response.StatusCode = 429;
+                await ctx.HttpContext.Response.WriteAsJsonAsync(
+                    new { error = "Rate limit exceeded. Max 20 AI messages per hour.", retryAfterSeconds = 3600 }, ct);
+            };
         });
 
         return services;

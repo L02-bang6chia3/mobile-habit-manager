@@ -42,3 +42,9 @@ public class UnauthorizedException : ApplicationException
     {
     }
 }
+
+// Thrown when the LLM upstream returns an unusable response
+public class LlmException : ApplicationException
+{
+    public LlmException(string message) : base(message) { }
+}

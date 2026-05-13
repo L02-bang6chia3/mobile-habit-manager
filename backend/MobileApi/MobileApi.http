@@ -223,6 +223,41 @@ Content-Type: application/json
 }
 
 
+### --- 8. GRAVITY AI CHAT (Yêu cầu Login, giới hạn 20 tin/giờ) ---
+
+### 8.1 Tạo cuộc trò chuyện mới + gửi tin đầu tiên
+# @name createConv
+POST {{HostAddress}}/api/ai/chat/conversations
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "message": "Tôi muốn học React trong 30 ngày, mỗi ngày khoảng 1 tiếng vào buổi tối"
+}
+
+### 8.2 Tiếp tục cuộc trò chuyện (clarify / plan)
+POST {{HostAddress}}/api/ai/chat/conversations/{{convId}}/messages
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "message": "Tôi là beginner, chưa biết JavaScript"
+}
+
+### 8.3 Danh sách cuộc trò chuyện
+GET {{HostAddress}}/api/ai/chat/conversations
+Authorization: Bearer {{Token}}
+
+### 8.4 Chi tiết cuộc trò chuyện + lịch sử tin nhắn
+GET {{HostAddress}}/api/ai/chat/conversations/{{convId}}
+Authorization: Bearer {{Token}}
+
+### 8.5 Xóa cuộc trò chuyện
+DELETE {{HostAddress}}/api/ai/chat/conversations/{{convId}}
+Authorization: Bearer {{Token}}
+
+
 ### --- BIẾN PHỤ TRỢ ---
 @busyTimeId = ID_BUSYTIME_VUA_TAO
-@orbitId = ID_ORBIT_VUA_TAO
+@orbitId    = ID_ORBIT_VUA_TAO
+@convId     = ID_CONVERSATION_VUA_TAO

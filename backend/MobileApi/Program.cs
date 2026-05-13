@@ -35,6 +35,7 @@ app.UseCors("MobilePolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers(); 
 

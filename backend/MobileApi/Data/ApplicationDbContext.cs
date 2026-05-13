@@ -20,6 +20,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Payment> Payments { get; set; }
     public DbSet<UserIntegration> UserIntegrations { get; set; }
     public DbSet<UserPreference> UserPreferences { get; set; }
+    public DbSet<ChatConversation> ChatConversations { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +66,18 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<UserIntegration>(e =>
         {
             e.HasOne<User>().WithMany().HasForeignKey(ui => ui.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ChatConversation>(e =>
+        {
+            e.HasOne<User>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(c => new { c.UserId, c.LastMessageAt });
+        });
+
+        modelBuilder.Entity<ChatMessage>(e =>
+        {
+            e.HasOne<ChatConversation>().WithMany().HasForeignKey(m => m.ConversationId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(m => new { m.ConversationId, m.CreatedAt });
         });
     }
 }

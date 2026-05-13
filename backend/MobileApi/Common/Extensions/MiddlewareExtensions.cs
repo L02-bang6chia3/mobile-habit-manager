@@ -23,6 +23,7 @@ public static class MiddlewareExtensions
                     ValidationException e   => (400, e.Message),
                     UnauthorizedException e => (401, e.Message),
                     NotFoundException e     => (404, e.Message),
+                    LlmException e          => (502, e.Message),
                     _                       => (500, "An unexpected error occurred.")
                 };
 

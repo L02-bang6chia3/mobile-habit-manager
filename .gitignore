@@ -173,3 +173,16 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .claude/
+
+# ── .NET build artifacts ──────────────────────────────────────────────────────
+# belt-and-suspenders; backend/.gitignore also covers these via relative patterns
+**/bin/
+**/obj/
+*.user
+.vs/
+.idea/
+**/.idea/
+
+# ── Sensitive / local config ──────────────────────────────────────────────────
+secrets.json
+appsettings.Production.json
