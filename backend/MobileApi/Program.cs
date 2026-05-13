@@ -1,12 +1,14 @@
 using MobileApi.Data;
 using MobileApi.Common.Extensions;
-using MobileApi.Common.Abstractions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 // Load environment variables from .env file
 Env.Load();
@@ -38,9 +40,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSecret!))
+                Encoding.UTF8.GetBytes(jwtSecret!)),
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = JwtRegisteredClaimNames.Sub
         };
     });
+
+// Add Authorization policies
+builder.Services.AddAuthorizationBuilder().AddPolicy("AdminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "admin"));
 
 // Add FluentValidation
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
@@ -78,6 +85,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("MobilePolicy");
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var feature = context.Features.Get<IExceptionHandlerFeature>();
+        var ex = feature?.Error;
+        var (status, message) = ex switch
+        {
+            MobileApi.Common.Exceptions.ValidationException e => (400, e.Message),
+            MobileApi.Common.Exceptions.UnauthorizedException e => (401, e.Message),
+            MobileApi.Common.Exceptions.NotFoundException e => (404, e.Message),
+            _ => (500, "An unexpected error occurred.")
+        };
+        context.Response.StatusCode = status;
+        await context.Response.WriteAsJsonAsync(new { error = message });
+    });
+});
 app.UseAuthentication();
 app.UseAuthorization();
 

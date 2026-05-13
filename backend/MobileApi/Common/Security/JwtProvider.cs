@@ -6,16 +6,11 @@ using MobileApi.Common.Abstractions;
 
 namespace MobileApi.Common.Security;
 
-public class JwtProvider : IJwtProvider
+public class JwtProvider(IConfiguration configuration) : IJwtProvider
 {
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration _configuration = configuration;
 
-    public JwtProvider(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
-
-    public string GenerateToken(string email, string userId)
+    public string GenerateToken(string email, string userId, string role)
     {
         var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
             ?? _configuration["JwtSettings:SecretKey"] 
@@ -34,14 +29,15 @@ public class JwtProvider : IJwtProvider
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Role, role)
         };
 
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.Now.AddMinutes(expiryMinutes),
+            expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

@@ -19,4 +19,6 @@ public class MissionTask
     public int SequenceOrder { get; set; }
 
     public TimeSpan EstimatedDuration { get; set; }
+
+    public bool IsDeleted { get; set; } = false;
 }

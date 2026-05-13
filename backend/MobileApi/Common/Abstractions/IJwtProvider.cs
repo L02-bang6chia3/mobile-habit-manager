@@ -2,5 +2,5 @@ namespace MobileApi.Common.Abstractions;
 
 public interface IJwtProvider
 {
-    string GenerateToken(string email, string userId);
+    string GenerateToken(string email, string userId, string role);
 }
