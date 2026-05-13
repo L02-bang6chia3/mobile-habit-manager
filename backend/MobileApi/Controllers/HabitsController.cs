@@ -9,15 +9,10 @@ namespace MobileApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class HabitsController(IHabitService habitService) : ControllerBase
+public class HabitsController(IHabitService habitService, IOrbitService orbitService) : ControllerBase
 {
-    private readonly IHabitService _habitService = habitService;
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userIdClaim != null ? Guid.Parse(userIdClaim) : Guid.Empty;
-    }
+    private Guid GetUserId() =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier) is { } s ? Guid.Parse(s) : Guid.Empty;
 
     [HttpPost]
     public async Task<IActionResult> CreateHabit([FromBody] CreateHabitRequest reqBody)
@@ -25,7 +20,9 @@ public class HabitsController(IHabitService habitService) : ControllerBase
         var userId = GetUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var habitId = await _habitService.CreateHabitAsync(userId, reqBody);
+        var habitId = await habitService.CreateHabitAsync(userId, reqBody);
+        await orbitService.GenerateForHabitAsync(userId, habitId);
+
         return CreatedAtAction(
             nameof(GetHabitById),
             new { id = habitId },
@@ -39,7 +36,7 @@ public class HabitsController(IHabitService habitService) : ControllerBase
         var userId = GetUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var habits = await _habitService.GetAllHabitsAsync(userId);
+        var habits = await habitService.GetAllHabitsAsync(userId);
         return Ok(new { data = habits });
     }
 
@@ -49,11 +46,8 @@ public class HabitsController(IHabitService habitService) : ControllerBase
         var userId = GetUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var habit = await _habitService.GetHabitByIdAsync(userId, id);
-        if (habit == null)
-        {
-            return NotFound(new { error = "Habit not found!" });
-        }
+        var habit = await habitService.GetHabitByIdAsync(userId, id);
+        if (habit == null) return NotFound(new { error = "Habit not found!" });
 
         return Ok(new { data = habit });
     }
@@ -64,11 +58,11 @@ public class HabitsController(IHabitService habitService) : ControllerBase
         var userId = GetUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var habit = await _habitService.UpdateHabitAsync(userId, id, request);
-        if (!habit)
-        {
-            return NotFound(new { error = "Habit not found!" });
-        }
+        var ok = await habitService.UpdateHabitAsync(userId, id, request);
+        if (!ok) return NotFound(new { error = "Habit not found!" });
+
+        // Re-schedule after any structural change to the habit
+        await orbitService.GenerateForHabitAsync(userId, id);
 
         return NoContent();
     }
@@ -79,12 +73,20 @@ public class HabitsController(IHabitService habitService) : ControllerBase
         var userId = GetUserId();
         if (userId == Guid.Empty) return Unauthorized();
 
-        var habit = await _habitService.DeleteHabitAsync(userId, id);
-        if (!habit)
-        {
-            return NotFound(new { error = "Habit not found!" });
-        }
+        var ok = await habitService.DeleteHabitAsync(userId, id);
+        if (!ok) return NotFound(new { error = "Habit not found!" });
 
         return NoContent();
+    }
+
+    // Manual re-schedule trigger (e.g. after syncing new busy times)
+    [HttpPost("{id}/schedule")]
+    public async Task<IActionResult> Schedule(Guid id)
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
+
+        var count = await orbitService.GenerateForHabitAsync(userId, id);
+        return Ok(new { data = new { scheduledCount = count } });
     }
 }

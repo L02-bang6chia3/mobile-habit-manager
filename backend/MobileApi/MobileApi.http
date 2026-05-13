@@ -157,5 +157,72 @@ POST {{HostAddress}}/api/busytimes/sync?syncFrom=2026-05-01T00:00:00Z
 Authorization: Bearer {{Token}}
 
 
+### --- 6. ORBITS (Lịch thực tế - Yêu cầu Login) ---
+
+### 6.1 Xem orbits trong 14 ngày tới
+GET {{HostAddress}}/api/orbits
+Authorization: Bearer {{Token}}
+
+### 6.2 Xem orbits theo khoảng thời gian cụ thể
+GET {{HostAddress}}/api/orbits?from=2026-05-14T00:00:00Z&to=2026-05-28T23:59:59Z
+Authorization: Bearer {{Token}}
+
+### 6.3 Xem chi tiết 1 orbit
+GET {{HostAddress}}/api/orbits/{orbitId}
+Authorization: Bearer {{Token}}
+
+### 6.4 Đánh dấu hoàn thành
+POST {{HostAddress}}/api/orbits/{orbitId}/done
+Authorization: Bearer {{Token}}
+
+### 6.5 Dời lịch (delay) bằng khoảng thời gian
+POST {{HostAddress}}/api/orbits/{orbitId}/delay
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "pushBy": "02:00:00",
+    "reason": "Họp đột xuất"
+}
+
+### 6.6 Dời lịch đến thời điểm cụ thể
+POST {{HostAddress}}/api/orbits/{orbitId}/delay
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "newStartUtc": "2026-05-15T10:00:00Z"
+}
+
+### 6.7 Xóa orbit
+DELETE {{HostAddress}}/api/orbits/{orbitId}
+Authorization: Bearer {{Token}}
+
+### 6.8 Kích hoạt lịch lại cho habit (sau khi sửa habit hoặc sync busy times)
+POST {{HostAddress}}/api/habits/{habitId}/schedule
+Authorization: Bearer {{Token}}
+
+
+### --- 7. PREFERENCES (Cấu hình lịch - Yêu cầu Login) ---
+
+### 7.1 Lấy cấu hình
+GET {{HostAddress}}/api/preferences
+Authorization: Bearer {{Token}}
+
+### 7.2 Cập nhật cấu hình
+PUT {{HostAddress}}/api/preferences
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "workdayStart": "08:00:00",
+    "workdayEnd": "22:00:00",
+    "minSlotMinutes": 15,
+    "bufferMinutes": 5,
+    "timezone": "Asia/Ho_Chi_Minh"
+}
+
+
 ### --- BIẾN PHỤ TRỢ ---
 @busyTimeId = ID_BUSYTIME_VUA_TAO
+@orbitId = ID_ORBIT_VUA_TAO
