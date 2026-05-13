@@ -1,30 +1,59 @@
-@HostAddress = http://localhost:5144
+@HostAddress = http://localhost:5000
 @Token = TOKEN_TỪ_LOGIN
 
-### 0. Đăng ký
+### --- 1. AUTHENTICATION (EMAIL/PASSWORD) ---
+
+### 1.1 Đăng ký tài khoản mới
 POST {{HostAddress}}/api/auth/register
 Content-Type: application/json
 
 {
-    "email": "[EMAIL_ADDRESS]",
-    "password": "[PASSWORD]",
-    "username": "[USERNAME]"
+    "username": "minhthu",
+    "email": "thu.hominh1704xx@hcmut.edu.vn",
+    "password": "Password123!"
 }
 
-### 1. Đăng nhập (Lấy Token)
+### 1.2 Đăng nhập (Lấy Token)
+# @name login
 POST {{HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "customer1@gmail.com",
-  "password": "12345678"
+    "email": "thu.hominh1704xx@hcmut.edu.vn",
+    "password": "Password123!"
 }
 
-### 2. Xem danh sách Habit
+
+### --- 2. SOCIAL LOGIN (GOOGLE) ---
+
+### 2.1 Lấy URL đăng nhập Google
+GET {{HostAddress}}/api/auth/google-login-url
+
+### 2.2 Callback xử lý đăng nhập Google (Chạy trên trình duyệt)
+# GET {{HostAddress}}/api/auth/login-callback?code=CODE_TU_GOOGLE
+
+
+### --- 3. GOOGLE CALENDAR (INTEGRATION) ---
+
+### 3.1 Lấy URL kết nối Calendar (Yêu cầu Login)
+GET {{HostAddress}}/api/google/auth-url
+Authorization: Bearer {{Token}}
+
+### 3.2 Callback xử lý kết nối Calendar (Chạy trên trình duyệt)
+# GET {{HostAddress}}/api/google/callback?code=CODE_TU_GOOGLE&state=USER_ID
+
+
+### --- 4. HABITS MANAGEMENT (Yêu cầu Login) ---
+
+### 4.1 Lấy danh sách thói quen
 GET {{HostAddress}}/api/habits
 Authorization: Bearer {{Token}}
 
-### 3. Tạo một Habit mới (Loại Mission)
+### 4.2 Lấy chi tiết 1 thói quen
+GET {{HostAddress}}/api/habits/{habitId}
+Authorization: Bearer {{Token}}
+
+### 4.3 Tạo thói quen mới
 # @name createHabit
 POST {{HostAddress}}/api/habits
 Authorization: Bearer {{Token}}
@@ -52,16 +81,17 @@ Content-Type: application/json
   ]
 }
 
-### 4. Sửa Habit (PATCH)
-# Copy ID của Habit vừa tạo ở trên thay vào chỗ <HABIT_ID>
-PATCH {{HostAddress}}/api/habits/<HABIT_ID>
+### 4.4 Sửa Habit (PATCH)
+# Copy ID của Habit vừa tạo ở trên thay vào chỗ {habitId}
+PATCH {{HostAddress}}/api/habits/{habitId}
 Authorization: Bearer {{Token}}
 Content-Type: application/json
 
 {
+  "title": "Lộ trình luyện giao tiếp 21 ngày (Updated)",
   "missionTasks": [
     {
-      "id": "<ID_TASK_CŨ_THAY_VÀO_ĐÂY>",
+      "id": "{taskId}",
       "title": "Chặng 1: Đã đổi tên bằng HTTP File"
     },
     {
@@ -71,3 +101,61 @@ Content-Type: application/json
     }
   ]
 }
+
+###
+
+### 4.5 Xóa Habit
+# Copy ID của Habit thay vào chỗ {habitId}
+DELETE {{HostAddress}}/api/habits/{habitId}
+Authorization: Bearer {{Token}}
+
+
+### --- 5. BUSY TIMES (Lịch bận - Yêu cầu Login) ---
+
+### 5.1 Lấy danh sách lịch bận
+GET {{HostAddress}}/api/busytimes
+Authorization: Bearer {{Token}}
+
+### 5.2 Lấy chi tiết 1 lịch bận
+GET {{HostAddress}}/api/busytimes/{busyTimeId}
+Authorization: Bearer {{Token}}
+
+### 5.3 Tạo lịch bận thủ công
+POST {{HostAddress}}/api/busytimes
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "title": "Họp nhóm dự án",
+    "startTime": "2026-05-10T09:00:00Z",
+    "endTime": "2026-05-10T11:00:00Z",
+    "isImported": false
+}
+
+### 5.4 Cập nhật lịch bận
+PUT {{HostAddress}}/api/busytimes/{busyTimeId}
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "title": "Họp nhóm (Đã dời giờ)",
+    "startTime": "2026-05-10T14:00:00Z",
+    "endTime": "2026-05-10T16:00:00Z"
+}
+
+### 5.5 Xóa lịch bận
+DELETE {{HostAddress}}/api/busytimes/{busyTimeId}
+Authorization: Bearer {{Token}}
+
+### 5.6 Đồng bộ lịch từ Google Calendar (Bước 6)
+# Kéo toàn bộ sự kiện từ Google Calendar về DB
+POST {{HostAddress}}/api/busytimes/sync
+Authorization: Bearer {{Token}}
+
+### 5.7 Đồng bộ từ một mốc thời gian cụ thể
+POST {{HostAddress}}/api/busytimes/sync?syncFrom=2026-05-01T00:00:00Z
+Authorization: Bearer {{Token}}
+
+
+### --- BIẾN PHỤ TRỢ ---
+@busyTimeId = ID_BUSYTIME_VUA_TAO

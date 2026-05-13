@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace MobileApi.Models;
 
@@ -10,13 +10,25 @@ public class BusyTime
     [Required]
     public Guid UserId { get; set; }
 
-    [Required]
+
+    /// <summary>
+    /// ID định danh từ nguồn ngoài (Google Event ID).
+    /// Dùng nội bộ để tránh lưu trùng khi Sync. Không expose qua API.
+    /// </summary>
     [MaxLength(255)]
     public string BusyId { get; set; } = string.Empty;
 
     [MaxLength(500)]
     public string Title { get; set; } = string.Empty;
 
-    public DateTime BusyStart { get; set; }
-    public DateTime BusyEnd { get; set; }
+    [Required]
+    public DateTime StartTime { get; set; }
+
+    [Required]
+    public DateTime EndTime { get; set; }
+
+    /// <summary>
+    /// Đánh dấu là được nhập từ Google Calendar
+    /// </summary>
+    public bool IsImported { get; set; } = false;
 }
