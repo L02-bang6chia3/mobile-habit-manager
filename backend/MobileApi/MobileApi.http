@@ -257,7 +257,28 @@ DELETE {{HostAddress}}/api/ai/chat/conversations/{{convId}}
 Authorization: Bearer {{Token}}
 
 
+### --- 9. HABIT LIBRARY (Thư viện Habits) ---
+
+### 9.1 Xem toàn bộ thư viện (KHÔNG cần đăng nhập)
+GET {{HostAddress}}/api/habits/library
+
+### 9.2 Lọc theo danh mục Education
+GET {{HostAddress}}/api/habits/library?category=Education
+
+### 9.3 Lọc theo loại Routine (type=0) hoặc Mission (type=1)
+GET {{HostAddress}}/api/habits/library?type=1
+
+### 9.4 Lọc kết hợp: Mission về Personal
+GET {{HostAddress}}/api/habits/library?category=Personal&type=1
+
+### 9.5 Clone một habit từ thư viện vào tài khoản của mình (Yêu cầu Login)
+# Lấy ID từ kết quả của 9.1, thay vào {libraryHabitId}
+POST {{HostAddress}}/api/habits/library/{libraryHabitId}/clone
+Authorization: Bearer {{Token}}
+
+
 ### --- BIẾN PHỤ TRỢ ---
-@busyTimeId = ID_BUSYTIME_VUA_TAO
-@orbitId    = ID_ORBIT_VUA_TAO
-@convId     = ID_CONVERSATION_VUA_TAO
+@busyTimeId     = ID_BUSYTIME_VUA_TAO
+@orbitId        = ID_ORBIT_VUA_TAO
+@convId         = ID_CONVERSATION_VUA_TAO
+@libraryHabitId = ID_HABIT_TRONG_THU_VIEN

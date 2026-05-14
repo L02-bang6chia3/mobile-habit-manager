@@ -376,3 +376,163 @@ This is a free LLM tier — abuse will burn the quota.
 - ☐ Re-sending the same prompt after rate limit boundary returns 429 with retry-after.
 - ☐ Test suite: scheduler unit tests + chat happy-path test green in CI.
 - ☐ CLAUDE.md §5 status table updated to mark Phase 3 ✅ and AI Chat ✅.
+
+# Test in Swagger
+Step 0 — Get a JWT token (prerequisite for all auth-required endpoints)
+
+  Register (one-time)
+
+  POST /api/auth/register
+  {
+    "username": "testuser",
+    "email": "test@orbit.dev",
+    "password": "Password123!"
+  }
+
+  Login → copy the token from data
+
+  POST /api/auth/login
+  {
+    "email": "test@orbit.dev",
+    "password": "Password123!"
+  }
+  Copy the JWT string from the response. In Swagger click Authorize (top-right lock icon) 
+  → paste Bearer <token>.
+
+  ---
+  Section 1 — Habit Library
+
+  1.1 Full library — no auth needed, no body
+
+  GET /api/habits/library
+
+  Expected: 20 seeded habits (CS/AI + English). Copy any id from a Mission habit for test 
+  1.4.
+
+  1.2 Filter by category
+
+  GET /api/habits/library?category=Education
+
+  1.3 Filter by type — Routine only
+
+  GET /api/habits/library?type=0
+
+  1.4 Filter by type — Mission only
+
+  GET /api/habits/library?type=1
+
+  1.5 Combined filter
+
+  GET /api/habits/library?category=Education&type=1
+
+  1.6 Clone a habit (requires auth)
+
+  POST /api/habits/library/{id}/clone
+
+  - No body needed.
+  - Replace {id} with a library habit id from test 1.1.
+  - Expected: 201 Created with { "data": "<new-habit-guid>" }.
+  - The habit is immediately scheduled — check /api/orbits afterwards to see generated    
+  slots.
+
+  ---
+  Section 2 — AI Gravity Chat
+
+  ▎ Rate limit: 20 messages/user/hour. All endpoints require auth.
+
+  2.1 Create conversation — trigger clarification
+
+  POST /api/ai/chat/conversations
+  {
+    "message": "I want to learn something"
+  }
+  Expected: intent in the response assistant message should be "clarify" (goal is too     
+  vague), ingestion should be null.
+
+  2.2 Create conversation — trigger a full plan
+
+  POST /api/ai/chat/conversations
+  {
+    "message": "I want to learn React from scratch in 30 days, 1 hour per day in the      
+  evenings. I know JavaScript basics."
+  }
+  Expected: 201 Created. The assistant message should have ingestion populated:
+  {
+    "data": {
+      "generatedHabitId": "<guid>",
+      "messages": [
+        { "role": "user", "content": "..." },
+        {
+          "role": "assistant",
+          "content": "Here is your 30-day React plan...",
+          "ingestion": {
+            "habitId": "<guid>",
+            "scheduledCount": 12,
+            "overflowedCount": 0
+          }
+        }
+      ]
+    }
+  }
+  Copy data.id (the conversation ID) for tests 2.3–2.5.
+
+  2.3 Continue an existing conversation
+
+  POST /api/ai/chat/conversations/{id}/messages
+
+  Replace {id} with the conversation ID from 2.2.
+  {
+    "message": "Can you make the tasks shorter, max 45 minutes each?"
+  }
+  Expected: 200 OK. Since generatedHabitId is already set, no second ingest happens —     
+  ingestion will be null in this follow-up.
+
+  2.4 List all conversations
+
+  GET /api/ai/chat/conversations
+
+  Expected: array with at least the two conversations you created. Each item shows        
+  generatedHabitId if a plan was made.
+
+  2.5 Get conversation detail with full message history
+
+  GET /api/ai/chat/conversations/{id}
+
+  Replace {id} with the ID from 2.2. Confirm all messages appear in order and the
+  assistant message has ingestion populated.
+
+  2.6 Delete a conversation
+
+  DELETE /api/ai/chat/conversations/{id}
+
+  Replace {id} with the ID from 2.1 (the clarify-only one). Expected: 204 No Content.     
+  Calling GET on it afterwards returns 404.
+
+  ---
+  Quick smoke checks for the rest of the stack
+
+  These verify that the library clone and AI-created habits are properly wired into the   
+  rest of the system.
+
+  Check that the cloned habit appears in your habits list
+
+  GET /api/habits
+
+  Check that the AI-created habit was auto-scheduled
+
+  GET /api/orbits
+
+  Verify preferences are set (Gravity scheduler uses these)
+
+  GET /api/preferences
+
+  If workdayStart / workdayEnd are missing, seed them:
+
+  PUT /api/preferences
+  {
+    "workdayStart": "08:00:00",
+    "workdayEnd": "22:00:00",
+    "minSlotMinutes": 30,
+    "bufferMinutes": 5,
+    "timezone": "Asia/Ho_Chi_Minh"
+  }

@@ -1,4 +1,5 @@
 using MobileApi.Common.Extensions;
+using MobileApi.Data;
 using DotNetEnv;
 
 // 1. Load environment variables
@@ -27,6 +28,13 @@ if (app.Environment.IsDevelopment())
         options.OAuthAppName("ORBIT Habit Manager");
         options.OAuthUsePkce(); 
     });
+}
+
+// Seed library habits (idempotent — safe on every startup)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await DataSeeder.SeedAsync(db);
 }
 
 app.UseCustomExceptionHandler(); // Xử lý lỗi tập trung

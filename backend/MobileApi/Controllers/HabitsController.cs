@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MobileApi.DTOs.Requests;
+using MobileApi.Enums;
 using MobileApi.Services;
 
 namespace MobileApi.Controllers;
@@ -88,5 +89,32 @@ public class HabitsController(IHabitService habitService, IOrbitService orbitSer
 
         var count = await orbitService.GenerateForHabitAsync(userId, id);
         return Ok(new { data = new { scheduledCount = count } });
+    }
+
+    // ── Habit Library ────────────────────────────────────────────────────────
+
+    [AllowAnonymous]
+    [HttpGet("library")]
+    public async Task<IActionResult> GetLibrary(
+        [FromQuery] string? category,
+        [FromQuery] HabitType? type)
+    {
+        var library = await habitService.GetLibraryAsync(category, type);
+        return Ok(new { data = library });
+    }
+
+    [HttpPost("library/{id}/clone")]
+    public async Task<IActionResult> CloneFromLibrary(Guid id)
+    {
+        var userId = GetUserId();
+        if (userId == Guid.Empty) return Unauthorized();
+
+        var habitId = await habitService.CloneFromLibraryAsync(userId, id);
+        await orbitService.GenerateForHabitAsync(userId, habitId);
+
+        return CreatedAtAction(
+            nameof(GetHabitById),
+            new { id = habitId },
+            new { data = habitId });
     }
 }

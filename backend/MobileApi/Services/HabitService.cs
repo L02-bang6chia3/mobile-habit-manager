@@ -14,6 +14,9 @@ public interface IHabitService
     Task<HabitResponse?> GetHabitByIdAsync(Guid userId, Guid id);
     Task<bool> UpdateHabitAsync(Guid userId, Guid id, UpdateHabitRequest request);
     Task<bool> DeleteHabitAsync(Guid userId, Guid id);
+
+    Task<IEnumerable<HabitResponse>> GetLibraryAsync(string? category, HabitType? type);
+    Task<Guid> CloneFromLibraryAsync(Guid userId, Guid libraryHabitId);
 }
 
 public class HabitService(ApplicationDbContext dbContext) : IHabitService
@@ -74,24 +77,7 @@ public class HabitService(ApplicationDbContext dbContext) : IHabitService
             .OrderByDescending(h => h.CreatedAt)
             .ToListAsync();
 
-        return habits.Select(h => new HabitResponse
-        {
-            Id = h.Id,
-            UserId = h.UserId,
-            AuthorId = h.AuthorId,
-            Title = h.Title,
-            Description = h.Description,
-            Category = h.Category,
-            Type = h.Type,
-            StartDate = h.StartDate,
-            EndDate = h.EndDate,
-            RecurrenceRule = h.RecurrenceRule,
-            IsPublic = h.IsPublic,
-            ClonedFromId = h.ClonedFromId,
-            CurrentStreak = h.CurrentStreak,
-            LongestStreak = h.LongestStreak,
-            CreatedAt = h.CreatedAt
-        });
+        return habits.Select(MapToResponse);
     }
 
     public async Task<HabitResponse?> GetHabitByIdAsync(Guid userId, Guid id)
@@ -99,24 +85,7 @@ public class HabitService(ApplicationDbContext dbContext) : IHabitService
         var habit = await _dbContext.HabitTemplates.FirstOrDefaultAsync(h => h.Id == id && h.UserId == userId && !h.IsDeleted);
         if (habit == null) return null;
 
-        var response = new HabitResponse
-        {
-            Id = habit.Id,
-            UserId = habit.UserId,
-            AuthorId = habit.AuthorId,
-            Title = habit.Title,
-            Description = habit.Description,
-            Category = habit.Category,
-            Type = habit.Type,
-            StartDate = habit.StartDate,
-            EndDate = habit.EndDate,
-            RecurrenceRule = habit.RecurrenceRule,
-            IsPublic = habit.IsPublic,
-            ClonedFromId = habit.ClonedFromId,
-            CurrentStreak = habit.CurrentStreak,
-            LongestStreak = habit.LongestStreak,
-            CreatedAt = habit.CreatedAt
-        };
+        var response = MapToResponse(habit);
 
         if (habit.Type == HabitType.Mission)
         {
@@ -125,15 +94,7 @@ public class HabitService(ApplicationDbContext dbContext) : IHabitService
                 .OrderBy(t => t.SequenceOrder)
                 .ToListAsync();
 
-            response.MissionTasks = [.. tasks.Select(t => new MissionTaskResponse
-            {
-                Id = t.Id,
-                HabitTemplateId = t.HabitTemplateId,
-                Title = t.Title,
-                Description = t.Description,
-                SequenceOrder = t.SequenceOrder,
-                EstimatedDuration = t.EstimatedDuration
-            })];
+            response.MissionTasks = tasks.Select(MapTaskToResponse).ToList();
         }
 
         return response;
@@ -250,4 +211,129 @@ public class HabitService(ApplicationDbContext dbContext) : IHabitService
             throw;
         }
     }
+
+    public async Task<IEnumerable<HabitResponse>> GetLibraryAsync(string? category, HabitType? type)
+    {
+        var habits = await _dbContext.HabitTemplates
+            .Where(h => h.IsPublic && h.Status == HabitStatus.Approved && !h.IsDeleted
+                        && (category == null || h.Category == category)
+                        && (type == null || h.Type == type))
+            .OrderBy(h => h.Category)
+            .ThenBy(h => h.Title)
+            .ToListAsync();
+
+        // Load all mission tasks in a single query to avoid N+1
+        var missionIds = habits
+            .Where(h => h.Type == HabitType.Mission)
+            .Select(h => h.Id)
+            .ToList();
+
+        var allTasks = missionIds.Count > 0
+            ? await _dbContext.MissionTasks
+                .Where(t => missionIds.Contains(t.HabitTemplateId) && !t.IsDeleted)
+                .OrderBy(t => t.SequenceOrder)
+                .ToListAsync()
+            : [];
+
+        var tasksByHabit = allTasks.GroupBy(t => t.HabitTemplateId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return habits.Select(h =>
+        {
+            var response = MapToResponse(h);
+            if (tasksByHabit.TryGetValue(h.Id, out var tasks))
+                response.MissionTasks = tasks.Select(MapTaskToResponse).ToList();
+            return response;
+        });
+    }
+
+    public async Task<Guid> CloneFromLibraryAsync(Guid userId, Guid libraryHabitId)
+    {
+        var source = await _dbContext.HabitTemplates
+            .FirstOrDefaultAsync(h => h.Id == libraryHabitId
+                                      && h.IsPublic
+                                      && h.Status == HabitStatus.Approved
+                                      && !h.IsDeleted)
+            ?? throw new Common.Exceptions.NotFoundException("Library habit", libraryHabitId);
+
+        using var tx = await _dbContext.Database.BeginTransactionAsync();
+        try
+        {
+            var clone = new HabitTemplate
+            {
+                Id             = Guid.NewGuid(),
+                UserId         = userId,
+                AuthorId       = source.AuthorId,
+                Title          = source.Title,
+                Description    = source.Description,
+                Category       = source.Category,
+                Type           = source.Type,
+                RecurrenceRule = source.RecurrenceRule,
+                IsPublic       = false,
+                Status         = HabitStatus.Private,
+                ClonedFromId   = source.Id,
+                CreatedAt      = DateTime.UtcNow
+            };
+            _dbContext.HabitTemplates.Add(clone);
+            await _dbContext.SaveChangesAsync();
+
+            if (source.Type == HabitType.Mission)
+            {
+                var sourceTasks = await _dbContext.MissionTasks
+                    .Where(t => t.HabitTemplateId == source.Id && !t.IsDeleted)
+                    .OrderBy(t => t.SequenceOrder)
+                    .ToListAsync();
+
+                _dbContext.MissionTasks.AddRange(sourceTasks.Select(t => new MissionTask
+                {
+                    Id                = Guid.NewGuid(),
+                    HabitTemplateId   = clone.Id,
+                    Title             = t.Title,
+                    Description       = t.Description,
+                    SequenceOrder     = t.SequenceOrder,
+                    EstimatedDuration = t.EstimatedDuration
+                }));
+                await _dbContext.SaveChangesAsync();
+            }
+
+            await tx.CommitAsync();
+            return clone.Id;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    private static HabitResponse MapToResponse(HabitTemplate h) => new()
+    {
+        Id             = h.Id,
+        UserId         = h.UserId,
+        AuthorId       = h.AuthorId,
+        Title          = h.Title,
+        Description    = h.Description,
+        Category       = h.Category,
+        Type           = h.Type,
+        StartDate      = h.StartDate,
+        EndDate        = h.EndDate,
+        RecurrenceRule = h.RecurrenceRule,
+        IsPublic       = h.IsPublic,
+        ClonedFromId   = h.ClonedFromId,
+        CurrentStreak  = h.CurrentStreak,
+        LongestStreak  = h.LongestStreak,
+        CreatedAt      = h.CreatedAt
+    };
+
+    private static MissionTaskResponse MapTaskToResponse(MissionTask t) => new()
+    {
+        Id                = t.Id,
+        HabitTemplateId   = t.HabitTemplateId,
+        Title             = t.Title,
+        Description       = t.Description,
+        SequenceOrder     = t.SequenceOrder,
+        EstimatedDuration = t.EstimatedDuration
+    };
 }
