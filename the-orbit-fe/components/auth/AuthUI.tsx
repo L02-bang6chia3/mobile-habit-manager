@@ -200,11 +200,25 @@ export function AuthInput({ label, password = false, ...props }: AuthInputProps)
   );
 }
 
-export function GradientButton({ title, onPress }: { title: string; onPress: () => void }) {
+export function GradientButton({
+  title,
+  onPress,
+  disabled = false,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
   return (
     <Pressable
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.gradientButton, pressed && styles.pressed]}
+      accessibilityState={{ disabled }}
+      style={({ pressed }) => [
+        styles.gradientButton,
+        disabled && styles.disabledButton,
+        pressed && !disabled && styles.pressed,
+      ]}
     >
       <LinearGradient
         colors={[BLUE, MID, '#E3A0ED']}
@@ -218,8 +232,16 @@ export function GradientButton({ title, onPress }: { title: string; onPress: () 
   );
 }
 
-export function AuthButton({ title, onPress }: { title: string; onPress: () => void }) {
-  return <GradientButton title={title} onPress={onPress} />;
+export function AuthButton({
+  title,
+  onPress,
+  disabled = false,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return <GradientButton title={title} onPress={onPress} disabled={disabled} />;
 }
 
 export function OutlineButton({ title, onPress }: { title: string; onPress: () => void }) {
@@ -398,6 +420,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.86,
+  },
+  disabledButton: {
+    opacity: 0.62,
   },
 
   outlineButton: {
