@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
+using MobileApi.Common.Exceptions;
 
 namespace MobileApi.Infrastructure.LLM;
 
@@ -30,6 +31,9 @@ public class GroqChatClient(IHttpClientFactory httpFactory, IOptions<GroqOptions
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new LlmException("GROQ_API_KEY is not configured. Add it to your .env file (get a free key at console.groq.com).");
+
         var client = httpFactory.CreateClient("Groq");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
@@ -37,10 +41,10 @@ public class GroqChatClient(IHttpClientFactory httpFactory, IOptions<GroqOptions
         var raw      = await response.Content.ReadAsStringAsync(ct);
 
         if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException($"Groq API error {(int)response.StatusCode}: {raw}");
+            throw new LlmException($"Groq API returned {(int)response.StatusCode}: {raw}");
 
         var resp = JsonSerializer.Deserialize<RespBody>(raw, _json)
-            ?? throw new InvalidOperationException("Empty Groq response");
+            ?? throw new LlmException("Groq returned an empty response body.");
 
         return new LlmChatResponse
         {

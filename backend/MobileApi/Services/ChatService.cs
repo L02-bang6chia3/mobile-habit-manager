@@ -80,10 +80,19 @@ public class ChatService(
         db.ChatConversations.Add(conversation);
         await db.SaveChangesAsync(ct);
 
-        await ProcessTurnAsync(userId, conversation, firstMessage, ct);
+        var firstTurn = await ProcessTurnAsync(userId, conversation, firstMessage, ct);
 
-        return await GetAsync(userId, conversation.Id)
+        var detail = await GetAsync(userId, conversation.Id)
             ?? throw new InvalidOperationException("Conversation not found after create");
+
+        if (firstTurn.Ingestion != null)
+        {
+            var assistantMsg = detail.Messages.LastOrDefault(m => m.Role == "assistant");
+            if (assistantMsg != null)
+                assistantMsg.Ingestion = firstTurn.Ingestion;
+        }
+
+        return detail;
     }
 
     public async Task<ChatMessageResponse> SendMessageAsync(

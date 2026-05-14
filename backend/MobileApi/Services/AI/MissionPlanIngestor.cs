@@ -18,8 +18,8 @@ public class MissionPlanIngestor(IHabitService habitService, IOrbitService orbit
             Description = plan.Description,
             Category    = plan.Category,
             Type        = HabitType.Mission,
-            StartDate   = plan.StartDate,
-            EndDate     = plan.EndDate,
+            StartDate   = EnsureUtc(plan.StartDate),
+            EndDate     = EnsureUtc(plan.EndDate),
             MissionTasks = plan.Tasks.Select(t => new CreateMissionTaskRequest
             {
                 Title             = t.Title,
@@ -35,9 +35,17 @@ public class MissionPlanIngestor(IHabitService habitService, IOrbitService orbit
 
         return new IngestionResult
         {
-            HabitId        = habitId,
-            ScheduledCount = scheduled,
+            HabitId         = habitId,
+            ScheduledCount  = scheduled,
             OverflowedCount = 0
         };
     }
+
+    // LLM dates may arrive as Unspecified or Local — always store UTC.
+    private static DateTime EnsureUtc(DateTime dt) => dt.Kind switch
+    {
+        DateTimeKind.Utc   => dt,
+        DateTimeKind.Local => dt.ToUniversalTime(),
+        _                  => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
+    };
 }
