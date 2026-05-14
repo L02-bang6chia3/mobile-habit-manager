@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "the orbit",
+    "slug": "the-orbit",
+    "orientation": "portrait",
+    "scheme": "theorbit",
+    "plugins": [
+      "expo-web-browser",
+      "expo-secure-store"
+    ]
+  }
+}
