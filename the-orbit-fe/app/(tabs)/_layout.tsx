@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
 import { Text, View } from 'react-native';
 import { colors } from '../../constants/theme';
+import * as Sentry from '@sentry/react-native';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -57,7 +58,7 @@ function TabIcon({
   );
 }
 
-export default function TabsLayout() {
+function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
@@ -182,3 +183,5 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+// export default Sentry.wrap(TabsLayout);
+export default  TabsLayout;

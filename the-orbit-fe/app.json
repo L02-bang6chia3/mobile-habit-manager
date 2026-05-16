@@ -5,7 +5,23 @@
     "orientation": "portrait",
     "scheme": "theorbit",
     "plugins": [
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "kiet-y1"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2a3fa37c-c469-4279-8bcb-8e4357312b61"
+      }
+    },
+    "android": {
+      "package": "com.kietlq.theorbit"
+    }
   }
 }

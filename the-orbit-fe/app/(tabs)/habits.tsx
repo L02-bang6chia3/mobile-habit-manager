@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Text, View } from 'react-native';
+import {Button, StyleSheet, Text, View} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrbitHeader } from '../../components/home/OrbitHeader';
 import { colors } from '../../constants/theme';
@@ -21,6 +21,13 @@ export default function HabitsScreen() {
             </Text>
           </View>
         </View>
+        {/*the code below only use in test sentry*/}
+        {/*<Button*/}
+        {/*    title="Test JS error on Sentry"*/}
+        {/*    onPress={() => {*/}
+        {/*      throw new Error("Sentry test");*/}
+        {/*    }}*/}
+        {/*/>*/}
       </LinearGradient>
     </SafeAreaView>
   );
