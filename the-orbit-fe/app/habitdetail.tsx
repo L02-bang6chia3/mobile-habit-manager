@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OrbitHeader } from '../../components/home/OrbitHeader';
-import { colors } from '../../constants/theme';
+import { OrbitHeader } from '../components/home/OrbitHeader';
+import { colors } from '../constants/theme';
 
 const comments = [
     {

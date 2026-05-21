@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OrbitHeader } from '../../components/home/OrbitHeader';
-import { colors } from '../../constants/theme';
+import { OrbitHeader } from '../components/home/OrbitHeader';
+import { colors } from '../constants/theme';
 
 const days = Array.from({ length: 6 }).map((_, index) => ({
     day: index + 1,
@@ -13,25 +13,21 @@ const days = Array.from({ length: 6 }).map((_, index) => ({
     ],
 }));
 
-export default function MyHabitTasksScreen() {
+export default function LibraryHabitTasksScreen() {
     return (
         <SafeAreaView style={styles.safe}>
             <LinearGradient colors={['#060812', '#0B101C', '#050711']} style={styles.container}>
                 <OrbitHeader />
 
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-                    <View style={styles.heroRow}>
-                        <View style={styles.heroText}>
-                            <Text style={styles.title}>
-                                <Text style={styles.titleBlue}>Habits</Text> Name
-                            </Text>
-                            <Text style={styles.duration}>Over 2 months</Text>
-                        </View>
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={[styles.content, styles.contentWithCta]}
+                >
+                    <Text style={styles.title}>
+                        <Text style={styles.titleBlue}>Habits</Text> Name
+                    </Text>
 
-                        <Pressable style={styles.editButton}>
-                            <Ionicons name="pencil" size={22} color="#7EB7FF" />
-                        </Pressable>
-                    </View>
+                    <Text style={styles.duration}>Over 2 months</Text>
 
                     <Text style={styles.description}>
                         A neuro-optimized trajectory designed to bypass atmospheric noise and enter a
@@ -70,11 +66,24 @@ export default function MyHabitTasksScreen() {
                         </View>
                     ))}
                 </ScrollView>
+
+                <View style={styles.ctaArea}>
+                    <Pressable>
+                        <LinearGradient
+                            colors={['#2F8BFF', '#89B9FF', '#EF94F4']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.cta}
+                        >
+                            <Ionicons name="sync" size={18} color="#111827" />
+                            <Text style={styles.ctaText}>SYNC TO ORBIT</Text>
+                        </LinearGradient>
+                    </Pressable>
+                </View>
             </LinearGradient>
         </SafeAreaView>
     );
 }
-
 const styles = StyleSheet.create({
     safe: {
         flex: 1,
@@ -241,4 +250,3 @@ const styles = StyleSheet.create({
         letterSpacing: 3,
     },
 });
-

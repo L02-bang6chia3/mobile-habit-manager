@@ -4,9 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import TaskDetailHeader from '../../components/TaskDetailHeader';
-import RecurringSchedule, { type RecurringDay } from '../../components/RecurringSchedule';
-import SignalSetupCard from '../../components/SignalSetupCard';
+import TaskDetailHeader from '../components/TaskDetailHeader';
+import RecurringSchedule, { type RecurringDay } from '../components/RecurringSchedule';
+import SignalSetupCard from '../components/SignalSetupCard';
 
 const SCREEN_GRADIENT_COLORS = ['#02040A', '#060814', '#090B18'] as const;
 const CONTEXT_CARD_GRADIENT_COLORS = ['#14141F', '#171724', '#241B31'] as const;

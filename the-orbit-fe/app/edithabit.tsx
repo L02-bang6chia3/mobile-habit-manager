@@ -1,23 +1,46 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OrbitHeader } from '../../components/home/OrbitHeader';
-import { colors } from '../../constants/theme';
+import { OrbitHeader } from '../components/home/OrbitHeader';
+import { colors } from '../constants/theme';
 
-export default function NewHabitScreen() {
+const mockTasks = Array.from({ length: 4 }).flatMap((_, index) => [
+    {
+        id: `alignment-${index}`,
+        title: 'Standard Alignment',
+        duration: '15m',
+        icon: 'accessibility-outline' as const,
+        color: '#2F8BFF',
+    },
+    {
+        id: `harvest-${index}`,
+        title: 'Knowledge Harvest',
+        duration: '30m',
+        icon: 'book-outline' as const,
+        color: '#EF94F4',
+    },
+]);
+
+export default function EditHabitScreen() {
     return (
         <SafeAreaView style={styles.safe}>
             <LinearGradient colors={['#060812', '#0B101C', '#050711']} style={styles.container}>
                 <OrbitHeader />
 
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentWithButton}>
                     <Text style={styles.title}>
-                        <Text style={styles.titleBlue}>New</Text> habit
+                        <Text style={styles.titleBlue}>Edit</Text> habit
                     </Text>
-                    <Text style={styles.subtitle}>Enter detailed information about the habit roadmap you want to create.</Text>
+
+                    <Text style={styles.subtitle}>Edit information about the habit roadmap.</Text>
 
                     <Text style={styles.inputLabel}>HABIT NAME</Text>
-                    <TextInput placeholder="e.g. Deep Neural Focus" placeholderTextColor="rgba(244,241,250,0.34)" style={styles.input} />
+                    <TextInput
+                        placeholder="e.g. Deep Neural Focus"
+                        placeholderTextColor="rgba(244,241,250,0.34)"
+                        style={styles.input}
+                    />
 
                     <Text style={styles.inputLabel}>HABIT DESCRIPTION</Text>
                     <TextInput
@@ -27,20 +50,42 @@ export default function NewHabitScreen() {
                         style={[styles.input, styles.textArea]}
                     />
 
-                    <Text style={styles.sectionTitle}>
-                        Daily <Text style={styles.sectionTitlePink}>Tasks</Text>
-                    </Text>
+                    <View style={styles.taskHeader}>
+                        <Text style={styles.sectionTitle}>
+                            All <Text style={styles.sectionTitlePink}>Tasks</Text>
+                        </Text>
 
-                    <Pressable style={styles.emptyAddButton}>
-                        <Text style={styles.emptyAddText}>+  ADD TASK</Text>
-                    </Pressable>
+                        <Pressable style={styles.addButton}>
+                            <Ionicons name="add" size={22} color="#FFFFFF" />
+                            <Text style={styles.addText}>ADD</Text>
+                        </Pressable>
+                    </View>
 
-                    <Pressable style={styles.ctaWrap}>
-                        <LinearGradient colors={['#2F8BFF', '#89B9FF', '#EF94F4']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cta}>
-                            <Text style={styles.ctaText}>CREATE HABIT</Text>
-                        </LinearGradient>
-                    </Pressable>
+                    <View style={styles.taskList}>
+                        {mockTasks.map((task) => (
+                            <View key={task.id} style={styles.taskRow}>
+                                <View style={[styles.taskAccent, { backgroundColor: task.color }]} />
+
+                                <View style={[styles.taskIcon, { backgroundColor: `${task.color}22` }]}>
+                                    <Ionicons name={task.icon} size={22} color={task.color} />
+                                </View>
+
+                                <Text style={styles.taskName}>{task.title}</Text>
+
+                                <View style={styles.durationBox}>
+                                    <Text style={styles.taskDuration}>{task.duration}</Text>
+                                    <Text style={styles.durationLabel}>DURATION</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
                 </ScrollView>
+
+                <View style={styles.saveArea}>
+                    <Pressable style={styles.saveButton}>
+                        <Text style={styles.saveText}>SAVE</Text>
+                    </Pressable>
+                </View>
             </LinearGradient>
         </SafeAreaView>
     );
@@ -48,10 +93,10 @@ export default function NewHabitScreen() {
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
     container: { flex: 1 },
-    content: {
+    contentWithButton: {
         paddingHorizontal: 35,
         paddingTop: 26,
-        paddingBottom: 56,
+        paddingBottom: 130,
     },
     title: {
         color: '#C992F0',
@@ -61,7 +106,7 @@ const styles = StyleSheet.create({
     titleBlue: { color: '#2F8BFF' },
     subtitle: {
         marginTop: 14,
-        maxWidth: 330,
+        maxWidth: 310,
         color: '#F4F1FA',
         fontSize: 18,
         fontWeight: '500',
@@ -97,31 +142,82 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         textAlignVertical: 'top',
     },
+    smallTextArea: {
+        minHeight: 69,
+        borderRadius: 28,
+        paddingTop: 16,
+        textAlignVertical: 'top',
+    },
+    taskHeader: {
+        marginTop: 38,
+        marginBottom: 34,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     sectionTitle: {
-        marginTop: 30,
         color: '#7FB2FF',
         fontSize: 25,
         fontWeight: '900',
     },
     sectionTitlePink: { color: '#D99AF3' },
-    emptyAddButton: {
-        marginTop: 28,
-        height: 70,
-        borderRadius: 18,
+    addButton: {
+        height: 50,
+        borderRadius: 25,
         borderWidth: 1,
-        borderStyle: 'dashed',
-        borderColor: '#D99AF3',
+        borderColor: '#A895FF',
+        paddingHorizontal: 18,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    addText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '900',
+        letterSpacing: 2,
+    },
+    taskList: { gap: 34 },
+    taskRow: {
+        minHeight: 54,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    taskAccent: {
+        width: 4,
+        height: 45,
+        borderTopRightRadius: 8,
+        borderBottomRightRadius: 8,
+        marginRight: 16,
+    },
+    taskIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
+        marginRight: 16,
     },
-    emptyAddText: {
-        color: '#A895FF',
-        fontSize: 13,
+    taskName: {
+        flex: 1,
+        color: 'rgba(244,241,250,0.62)',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    durationBox: { alignItems: 'flex-end' },
+    taskDuration: {
+        color: '#F5F1FA',
+        fontSize: 16,
         fontWeight: '900',
-        letterSpacing: 1.5,
+    },
+    durationLabel: {
+        marginTop: 2,
+        color: 'rgba(244,241,250,0.18)',
+        fontSize: 9,
+        fontWeight: '800',
     },
     recurrenceLabel: {
-        marginTop: 54,
+        marginTop: 60,
         color: 'rgba(244,241,250,0.38)',
         fontSize: 10,
         fontWeight: '900',
@@ -152,94 +248,6 @@ const styles = StyleSheet.create({
     segmentTextActive: {
         color: '#07101C',
         fontWeight: '900',
-    },
-    dateSelect: {
-        marginTop: 14,
-        height: 40,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#C992F0',
-        paddingHorizontal: 28,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    dateText: {
-        color: '#F4F1FA',
-        fontSize: 14,
-        fontWeight: '900',
-        letterSpacing: 1,
-    },
-    calendarCard: {
-        marginTop: 14,
-        borderRadius: 32,
-        backgroundColor: 'rgba(20,21,31,0.82)',
-        padding: 25,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.06)',
-    },
-    calendarHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    calendarYear: {
-        color: '#F4F1FA',
-        fontSize: 20,
-        fontWeight: '900',
-    },
-    monthRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-    },
-    monthText: {
-        color: '#F4F1FA',
-        fontSize: 13,
-        fontWeight: '800',
-    },
-    weekRow: {
-        marginTop: 38,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    weekText: {
-        width: 30,
-        textAlign: 'center',
-        color: 'rgba(244,241,250,0.52)',
-        fontSize: 10,
-    },
-    daysGrid: {
-        marginTop: 20,
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        rowGap: 22,
-    },
-    calendarDay: {
-        width: `${100 / 7}%`,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    dayText: {
-        width: 31,
-        height: 31,
-        borderRadius: 16,
-        textAlign: 'center',
-        textAlignVertical: 'center',
-        color: '#F4F1FA',
-        fontSize: 14,
-    },
-    mutedDay: { color: 'rgba(244,241,250,0.16)' },
-    todayText: { color: '#23CFFF', fontWeight: '900' },
-    blueDay: {
-        borderRadius: 16,
-    },
-    pinkDay: {
-        borderRadius: 16,
-        backgroundColor: 'rgba(239,148,244,0.42)',
-        shadowColor: '#EF94F4',
-        shadowOpacity: 0.9,
-        shadowRadius: 9,
     },
     signalCard: {
         marginTop: 28,
@@ -373,24 +381,28 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         backgroundColor: 'rgba(255,255,255,0.65)',
     },
-    ctaWrap: {
-        marginTop: 48,
+    saveArea: {
+        position: 'absolute',
+        left: 34,
+        right: 34,
+        bottom: 28,
+    },
+    saveButton: {
+        height: 57,
+        borderRadius: 29,
+        backgroundColor: '#4D9CFF',
+        alignItems: 'center',
+        justifyContent: 'center',
         shadowColor: '#2F8BFF',
-        shadowOpacity: 0.8,
-        shadowRadius: 22,
+        shadowOpacity: 0.55,
+        shadowRadius: 16,
         shadowOffset: { width: 0, height: 8 },
         elevation: 10,
     },
-    cta: {
-        height: 58,
-        borderRadius: 30,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    ctaText: {
-        color: '#111827',
+    saveText: {
+        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '900',
-        letterSpacing: 3,
+        letterSpacing: 1,
     },
 });
