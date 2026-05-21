@@ -50,8 +50,7 @@ public class HabitTemplate
 
     public bool IsPublic { get; set; } = false;
 
-    // TODO: Bạn cần định nghĩa Enum HabitStatus tương tự HabitType
-    // public Enums.HabitStatus Status { get; set; } 
+    public Enums.HabitStatus Status { get; set; } = Enums.HabitStatus.Private;
 
     public Guid? ClonedFromId { get; set; }
 

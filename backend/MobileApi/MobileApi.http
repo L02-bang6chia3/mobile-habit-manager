@@ -157,5 +157,128 @@ POST {{HostAddress}}/api/busytimes/sync?syncFrom=2026-05-01T00:00:00Z
 Authorization: Bearer {{Token}}
 
 
+### --- 6. ORBITS (Lịch thực tế - Yêu cầu Login) ---
+
+### 6.1 Xem orbits trong 14 ngày tới
+GET {{HostAddress}}/api/orbits
+Authorization: Bearer {{Token}}
+
+### 6.2 Xem orbits theo khoảng thời gian cụ thể
+GET {{HostAddress}}/api/orbits?from=2026-05-14T00:00:00Z&to=2026-05-28T23:59:59Z
+Authorization: Bearer {{Token}}
+
+### 6.3 Xem chi tiết 1 orbit
+GET {{HostAddress}}/api/orbits/{orbitId}
+Authorization: Bearer {{Token}}
+
+### 6.4 Đánh dấu hoàn thành
+POST {{HostAddress}}/api/orbits/{orbitId}/done
+Authorization: Bearer {{Token}}
+
+### 6.5 Dời lịch (delay) bằng khoảng thời gian
+POST {{HostAddress}}/api/orbits/{orbitId}/delay
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "pushBy": "02:00:00",
+    "reason": "Họp đột xuất"
+}
+
+### 6.6 Dời lịch đến thời điểm cụ thể
+POST {{HostAddress}}/api/orbits/{orbitId}/delay
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "newStartUtc": "2026-05-15T10:00:00Z"
+}
+
+### 6.7 Xóa orbit
+DELETE {{HostAddress}}/api/orbits/{orbitId}
+Authorization: Bearer {{Token}}
+
+### 6.8 Kích hoạt lịch lại cho habit (sau khi sửa habit hoặc sync busy times)
+POST {{HostAddress}}/api/habits/{habitId}/schedule
+Authorization: Bearer {{Token}}
+
+
+### --- 7. PREFERENCES (Cấu hình lịch - Yêu cầu Login) ---
+
+### 7.1 Lấy cấu hình
+GET {{HostAddress}}/api/preferences
+Authorization: Bearer {{Token}}
+
+### 7.2 Cập nhật cấu hình
+PUT {{HostAddress}}/api/preferences
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "workdayStart": "08:00:00",
+    "workdayEnd": "22:00:00",
+    "minSlotMinutes": 15,
+    "bufferMinutes": 5,
+    "timezone": "Asia/Ho_Chi_Minh"
+}
+
+
+### --- 8. GRAVITY AI CHAT (Yêu cầu Login, giới hạn 20 tin/giờ) ---
+
+### 8.1 Tạo cuộc trò chuyện mới + gửi tin đầu tiên
+# @name createConv
+POST {{HostAddress}}/api/ai/chat/conversations
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "message": "Tôi muốn học React trong 30 ngày, mỗi ngày khoảng 1 tiếng vào buổi tối"
+}
+
+### 8.2 Tiếp tục cuộc trò chuyện (clarify / plan)
+POST {{HostAddress}}/api/ai/chat/conversations/{{convId}}/messages
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+    "message": "Tôi là beginner, chưa biết JavaScript"
+}
+
+### 8.3 Danh sách cuộc trò chuyện
+GET {{HostAddress}}/api/ai/chat/conversations
+Authorization: Bearer {{Token}}
+
+### 8.4 Chi tiết cuộc trò chuyện + lịch sử tin nhắn
+GET {{HostAddress}}/api/ai/chat/conversations/{{convId}}
+Authorization: Bearer {{Token}}
+
+### 8.5 Xóa cuộc trò chuyện
+DELETE {{HostAddress}}/api/ai/chat/conversations/{{convId}}
+Authorization: Bearer {{Token}}
+
+
+### --- 9. HABIT LIBRARY (Thư viện Habits) ---
+
+### 9.1 Xem toàn bộ thư viện (KHÔNG cần đăng nhập)
+GET {{HostAddress}}/api/habits/library
+
+### 9.2 Lọc theo danh mục Education
+GET {{HostAddress}}/api/habits/library?category=Education
+
+### 9.3 Lọc theo loại Routine (type=0) hoặc Mission (type=1)
+GET {{HostAddress}}/api/habits/library?type=1
+
+### 9.4 Lọc kết hợp: Mission về Personal
+GET {{HostAddress}}/api/habits/library?category=Personal&type=1
+
+### 9.5 Clone một habit từ thư viện vào tài khoản của mình (Yêu cầu Login)
+# Lấy ID từ kết quả của 9.1, thay vào {libraryHabitId}
+POST {{HostAddress}}/api/habits/library/{libraryHabitId}/clone
+Authorization: Bearer {{Token}}
+
+
 ### --- BIẾN PHỤ TRỢ ---
-@busyTimeId = ID_BUSYTIME_VUA_TAO
+@busyTimeId     = ID_BUSYTIME_VUA_TAO
+@orbitId        = ID_ORBIT_VUA_TAO
+@convId         = ID_CONVERSATION_VUA_TAO
+@libraryHabitId = ID_HABIT_TRONG_THU_VIEN
